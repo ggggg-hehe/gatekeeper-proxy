@@ -1,0 +1,202 @@
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
+
+def extract_external_links(target_url):
+    try:
+        # Send an HTTP GET request to the page
+        headers = {'User-Agent': 'EducationalBot/1.0'}
+        response = requests.get(target_url, headers=headers, timeout=10)
+        
+        # Verify the request was successful
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            base_domain = urlparse(target_url).netloc
+            external_links = set()
+
+            # Find all hyperlinks on the page
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                parsed_href = urlparse(href)
+                
+                # Check if the link points to an external domain
+                if parsed_href.netloc and parsed_href.netloc != base_domain:
+                    external_links.add(href)
+            
+            return external_links
+    except Exception as e:
+        print(f"Error analyzing URL: {e}")
+        return set()
+
+# Example usage on an abstract testing domain
+# links = extract_external_links("https://example.com")
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Website Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            background-color: #f9f9f9;
+        }
+        .search-container {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 25px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-input:focus {
+            border-color: #007bff;
+        }
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none; /* Hidden by default */
+        }
+        .results-list li {
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .results-list li:last-child {
+            border-bottom: none;
+        }
+        .results-list li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            display: block;
+        }
+        .results-list li a span {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+        .results-list li:hover {
+            background-color: #f1f1f1;
+        }
+        .no-results {
+            padding: 12px 20px;
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="search-container">
+        <!-- Search Input -->
+        <input type="text" id="searchInput" class="search-input" placeholder="Search this site...">
+        
+        <!-- Results Dropdown -->
+        <ul id="resultsList" class="results-list"></ul>
+    </div>
+
+    <!-- Link the JavaScript script here -->
+    <script src="search.js"></script>
+</body>
+</html>
+// 1. Mock Database / Site Index
+// In production, this can be fetched from a static JSON file or a database API
+const siteIndex = [
+    {
+        title: "About Our School",
+        url: "/about.html",
+        description: "Learn about Chenango Valley's vision, history, and administration.",
+        keywords: ["district", "board", "superintendent", "history"]
+    },
+    {
+        title: "Athletics & Sports Schedules",
+        url: "/athletics.html",
+        description: "Get updates on seasonal varsity, junior varsity, and modified sports.",
+        keywords: ["warriors", "football", "soccer", "basketball", "games"]
+    },
+    {
+        title: "School Menus & Food Services",
+        url: "/food-services.html",
+        description: "View daily elementary and high school breakfast and lunch menus.",
+        keywords: ["lunch", "breakfast", "cafeteria", "meals", "nutrition"]
+    },
+    {
+        title: "Academic Calendars",
+        url: "/calendar.html",
+        description: "Download the 2026-2027 district holiday and instructional calendar.",
+        keywords: ["holidays", "closings", "schedule", "days off"]
+    },
+    {
+        title: "Music and Performing Arts",
+        url: "/arts.html",
+        description: "Information regarding the Theatre Guild, choir concerts, and honor societies.",
+        keywords: ["shrek", "musical", "concert", "band", "piano"]
+    }
+];
+
+// 2. DOM Elements
+const searchInput = document.getElementById('searchInput');
+const resultsList = document.getElementById('resultsList');
+
+// 3. Search Event Listener
+searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    
+    // Clear previous results
+    resultsList.innerHTML = '';
+
+    // If search bar is empty, hide the dropdown list and exit
+    if (query === '') {
+        resultsList.style.display = 'none';
+        return;
+    }
+
+    // Filter index matches based on Title, Description, or Keywords
+    const matchedItems = siteIndex.filter(item => {
+        return item.title.toLowerCase().includes(query) || 
+               item.description.toLowerCase().includes(query) ||
+               item.keywords.some(keyword => keyword.toLowerCase().includes(query));
+    });
+
+    // Display Results
+    resultsList.style.display = 'block';
+
+    if (matchedItems.length === 0) {
+        resultsList.innerHTML = `<li class="no-results">No results found for "${e.target.value}"</li>`;
+    } else {
+        matchedItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <a href="${item.url}">
+                    ${item.title}
+                    <span>${item.description}</span>
+                </a>
+            `;
+            resultsList.appendChild(li);
+        });
+    }
+});
+
+// Close dropdown if user clicks outside of the search box
+document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target) && !resultsList.contains(e.target)) {
+        resultsList.style.display = 'none';
+    }
+});
